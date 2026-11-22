@@ -19,7 +19,6 @@ data class OpeningRepertoire(
     val updatedAt: Long = 1L,
 )
 
-/** Offline starter lines. The server can deliver newer or larger repertoires with the same schema. */
 object OpeningCatalog {
     val starterLines = listOf(
         line("ruy-closed", "Morphy Defense · Closed", "Build a strong center, then prepare the d4 break.", listOf(
