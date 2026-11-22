@@ -251,17 +251,30 @@ class TrainerStore(initial: TrainerUiState = TrainerUiState()) {
         )
         val line = old.openingLines.firstOrNull { it.id == old.selectedOpeningId } ?: return old
         val expected = line.plies.getOrNull(old.openingPlyIndex).takeIf { old.onRepertoireLine }
-        if (expected == null && !old.stockfishOpponent) return old.copy(openingComplete = true, selectedSquare = null, legalDestinations = emptySet(), feedback = MoveFeedback.Correct, coachMessage = "Line complete. Great work!")
+        if (expected == null && !old.stockfishOpponent) {
+            return if (old.openingPlyIndex >= line.plies.size) {
+                old.copy(openingComplete = true, selectedSquare = null, legalDestinations = emptySet(), feedback = MoveFeedback.Correct, coachMessage = "Line complete. Great work!")
+            } else {
+                val nextPosition = ChessRules.apply(old.chessPosition, legal)
+                val id = (old.lastBoardMove?.id ?: 0L) + 1L
+                old.copy(
+                    chessPosition = nextPosition,
+                    selectedSquare = null,
+                    legalDestinations = emptySet(),
+                    lastBoardMove = AnimatedBoardMove(from, to, old.chessPosition.pieces[from] ?: 'P', id),
+                    feedback = MoveFeedback.Correct,
+                    onRepertoireLine = false,
+                    coachMessage = "Off-book training mode. Continue playing.",
+                )
+            }
+        }
         if (!old.stockfishOpponent && expected != null && legal.uci.take(4) != expected.uci.take(4)) return old.copy(
             selectedSquare = null, legalDestinations = emptySet(), feedback = MoveFeedback.Incorrect,
             coachMessage = "Legal move, but this line calls for ${expected.san}. ${expected.guide}".trim(),
         )
         val nextPosition = if (old.stockfishOpponent) ChessRules.apply(old.chessPosition, legal)
             else expected?.let { ChessRules.playUci(old.chessPosition, it.uci) }
-                ?: return old.copy(
-            selectedSquare = null, legalDestinations = emptySet(), feedback = MoveFeedback.Incorrect,
-            coachMessage = "This repertoire move is not legal from the current position. Select another line or sync the library.",
-        )
+                ?: ChessRules.apply(old.chessPosition, legal)
         val staysOnLine = old.onRepertoireLine && expected?.uci?.take(4) == legal.uci.take(4)
         val nextIndex = old.openingPlyIndex + if (staysOnLine) 1 else 0
         val reply = line.plies.getOrNull(nextIndex)?.takeIf { !old.stockfishOpponent && staysOnLine && !nextPosition.whiteToMove }
@@ -339,8 +352,7 @@ class TrainerStore(initial: TrainerUiState = TrainerUiState()) {
         val selected = old.selectedPuzzleSquare
         if (selected == null) {
             return if (square == expected.take(2)) old.copy(selectedPuzzleSquare = square, puzzleFeedback = "")
-            else if (old.puzzlePieces.containsKey(square)) old.copy(selectedPuzzleSquare = square, puzzleFeedback = "Choose the piece that starts the solution.")
-            else old
+            else old.copy(selectedPuzzleSquare = null, puzzleFeedback = "Choose the piece that starts the solution.")
         }
         if (square != expected.substring(2, 4)) {
             return old.copy(selectedPuzzleSquare = null, puzzleFeedback = "Not the solution. Try another move.")
@@ -384,10 +396,3 @@ private fun parseFenPieces(fen: String): Map<String, Char> {
     }
     return pieces
 }
-
-private fun openingPosition() = mapOf(
-    "a8" to 'r', "b8" to 'n', "c8" to 'b', "d8" to 'q', "e8" to 'k', "f8" to 'b', "h8" to 'r',
-    "a7" to 'p', "b7" to 'p', "c7" to 'p', "d7" to 'p', "e7" to 'p', "f7" to 'p', "g7" to 'p', "h7" to 'p',
-    "e5" to 'p', "c6" to 'n', "b5" to 'B', "e4" to 'P', "a2" to 'P', "b2" to 'P', "c2" to 'P', "d2" to 'P', "e2" to 'P', "f2" to 'P', "g2" to 'P', "h2" to 'P',
-    "a1" to 'R', "b1" to 'N', "c1" to 'B', "d1" to 'Q', "e1" to 'K', "f1" to 'B', "g1" to 'N', "h1" to 'R',
-)

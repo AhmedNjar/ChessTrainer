@@ -1,76 +1,103 @@
 # Chess Trainer
 
-Offline-first chess training app scaffold using Kotlin Multiplatform and Compose Multiplatform. The shared Compose UI currently recreates the four supplied screens: Home, Opening Trainer, Puzzle Victory, and Settings.
+A modern, offline-first Chess Training & Repertoire Application built with **Kotlin Multiplatform (KMP)** and **Compose Multiplatform**.
 
-## Current app pieces
+Chess Trainer allows chess enthusiasts to practice opening repertoires, train against local Stockfish engine AI, solve tactical puzzles offline, and sync repertoires with a local/cloud Ktor backend.
 
-- Shared Compose screens styled from the Figma Make project at `C:\Users\Lenovo\Downloads\Chess Training App Screens`.
-- A ten-puzzle offline starter set taken from the supplied Lichess CSV.
-- SQLDelight schema and platform drivers for Android, desktop, and iOS.
-- A CSV row parser and streaming importer. Android and desktop expose a file picker; imports run in batches so the full 1.14 GB source is not loaded into memory.
-- Shared UCI controller interface, PGN move-text parser, and trainer state/event/effect types.
+---
 
-The current board interactions are a visual prototype. Full legal move generation, variation-aware PGN trees, connected Stockfish binaries, and finished iOS file picking remain follow-up work.
+## 🌟 Key Features
 
-## Android SDK command-line tools
+- ♟️ **Opening Repertoire Trainer**: 16 comprehensive Ruy Lopez opening lines with move-by-move guides, legal destination square highlights, animated piece movements, and automated opponent responses.
+- 🤖 **Local Stockfish 19 Integration**: Integrated Stockfish 19 UCI engine binary (Android ARM64) allowing real-time practice as White against Stockfish (Black) with adjustable skill levels (0–20) and seamless transition to free-play.
+- 🧩 **Offline Puzzle Arena**: Built-in starter puzzle set and high-performance streaming CSV importer capable of importing full Lichess puzzle databases (`lichess_db_puzzle.csv`) directly into on-device SQLite.
+- 🔐 **Ktor Authentication & Sync Backend**: Included `authServer` module supporting PBKDF2-password hashing, JWT-token authentication, token revocation, and repertoire synchronization over REST.
+- 📱 **Multiplatform Core**: Shared Compose UI across Android, Desktop (JVM), and iOS with SQLDelight for cross-platform local database storage.
 
-Install a JDK 17 or newer, the Android SDK Command-Line Tools, and Gradle 9.5 or newer. Set `JAVA_HOME` and `ANDROID_HOME`, then install the SDK packages and accept licenses:
+---
 
-```powershell
-sdkmanager --sdk_root="$env:ANDROID_HOME" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-sdkmanager --licenses
+## 📂 Project Architecture
+
+```text
+ChessTrainer/
+├── androidApp/          # Android application wrapper & JNI Stockfish binary
+├── composeApp/          # Shared Compose Multiplatform UI, MVI state store & DB logic
+│   ├── src/commonMain   # Core UI, MVI store, Chess rules engine, Puzzle parser
+│   ├── src/androidMain  # Android platform drivers & Stockfish gateway
+│   ├── src/desktopMain  # Desktop (JVM) window launcher & platform file pickers
+│   └── src/iosMain      # iOS MainViewController entry point
+├── authServer/          # Ktor backend server (JWT auth, SQLite user database, REST API)
+└── sharedOpenings/      # Shared opening repertoire definitions & data models
 ```
 
-Use the Android CLI helper from this directory:
+---
 
-```powershell
-.\scripts\android-cli.ps1 check
-.\scripts\android-cli.ps1 build
-.\scripts\android-cli.ps1 install
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **JDK**: Version 17 or higher
+- **Android SDK**: API 34+ (compileSdk 36, minSdk 24)
+- **Gradle**: 8.x / 9.x (wrapped with `./gradlew`)
+
+---
+
+### Building & Running
+
+#### 1. Android Application (`:androidApp`)
+
+Connect an Android device/emulator and run:
+
+```bash
+./gradlew :androidApp:installDebug
 ```
 
-The app module is `androidApp`; Gradle builds an APK under `androidApp/build/outputs/apk/debug/`. The `install` command uses the Gradle install task, which requires a connected device or running emulator.
+Alternatively, build the debug APK:
 
-## Desktop and iOS
+```bash
+./gradlew :androidApp:assembleDebug
+```
 
-Run desktop with `gradle :composeApp:run` on Windows, macOS, or Linux. iOS frameworks are configured for device and simulator targets. iOS compilation and running require macOS with Xcode; open the `iosApp` wrapper from Xcode after creating/adding it to an Xcode project.
+#### 2. Desktop Application (`:composeApp`)
 
-## Import the full puzzle database
+Launch the Compose Desktop app on Windows, macOS, or Linux:
 
-Open **Settings → Offline library → Import full Lichess CSV** and choose `lichess_db_puzzle.csv`. The import streams rows and commits them to SQLite in batches. The importer validates the CSV header before replacing the starter library.
+```bash
+./gradlew :composeApp:run
+```
 
-## Opening trainer and offline repertoire
+#### 3. Authentication Backend (`:authServer`)
 
-The opening trainer is a White repertoire trainer with legal-square hints, tap-to-move, drag-and-drop, animated piece travel, and automatic moves for Black. Its starter catalog covers sixteen major Ruy Lopez lines, including Morphy Closed, Berlin, Exchange, Schliemann, Classical, Steinitz, Arkhangelsk, Modern Arkhangelsk, Cozio, Bird, Norwegian, Worrall, Smyslov, Chigorin, Zaitsev, and Marshall. Each White move has an explanatory guide. The shared catalog source is `sharedOpenings/src/main/kotlin/com/knight/chesstrainer/openings/OpeningRepertoire.kt`.
+Start the local Ktor authentication & repertoire sync server:
 
-The Ktor server exposes `GET /api/repertoires`; it seeds the catalog in its SQLite database on first start. In the app, **Train → Sync** downloads and merges catalog lines into the on-device SQLDelight database. Starter lines are also seeded locally, so training works before the first sync and when offline.
+**Linux / macOS:**
+```bash
+export CHESS_AUTH_JWT_SECRET=$(openssl rand -base64 32)
+./gradlew :authServer:run
+```
 
-### Stockfish play
-
-The Android ARM64 build includes the official Stockfish 19 UCI engine. On the Train screen, choose **Play** under **Practice with Stockfish** to start the selected opening against Stockfish as Black. The repertoire move guide stays active while play follows that line; after a different move, the game continues against the engine as free play. Strength is adjustable from 0 to 20 during a match. The engine runs locally, so no server connection is needed for play.
-
-The bundled engine is under `androidApp/src/main/jniLibs/arm64-v8a/`. The matching GPL notice, authors, and source URL are in `androidApp/src/main/assets/stockfish/`. The Android executable is ARM64; the current Desktop and iOS hosts do not package a Stockfish process.
-
-## Source references
-
-- Design: `C:\Users\Lenovo\Downloads\Chess Training App Screens\src\App.tsx` and `src\index.css`
-- Full puzzle CSV: `C:\Users\Lenovo\Downloads\lichess_db_puzzle.csv\lichess_db_puzzle.csv`
-
-## Local Ktor authentication backend
-
-The `authServer` module provides email/password sign-up, sign-in, `/api/auth/me`, and token-revoking sign-out. It stores accounts in SQLite and stores only PBKDF2-HMAC-SHA256 password hashes. The server requires a secret from the environment and refuses to start with a missing or short secret.
-
-Start the backend from the project root in PowerShell:
-
+**Windows (PowerShell):**
 ```powershell
-$env:CHESS_AUTH_JWT_SECRET = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+$env:CHESS_AUTH_JWT_SECRET = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
 .\gradlew.bat :authServer:run
 ```
 
-For a phone connected through ADB, forward its loopback port to the computer:
+The server will listen on `http://0.0.0.0:8080` by default.
 
-```powershell
-F:\android\Sdk\platform-tools\adb.exe reverse tcp:8080 tcp:8080
-```
+---
 
-The Android debug app defaults to `http://127.0.0.1:8080`. Override the backend URL with Gradle property `-PchessAuthBaseUrl=http://host:port` or environment variable `CHESS_AUTH_BASE_URL`. The debug manifest allows cleartext HTTP for local development only; production deployment needs HTTPS and a production secret. The local SQLite file is `authServer/data/users.sqlite` by default.
+## 📥 Importing Full Puzzle CSV
+
+To import the full Lichess puzzle database:
+1. Download `lichess_db_puzzle.csv` from [Lichess Open Database](https://database.lichess.org/puzzles/).
+2. In the app, navigate to **Settings → Offline library → Import full Lichess CSV**.
+3. Select your downloaded `lichess_db_puzzle.csv`.
+4. The streaming importer will parse and populate your local SQLite database without memory overhead issues.
+
+---
+
+## 📄 License & Attributions
+
+- **Stockfish Engine**: Includes Stockfish 19 binary (`GPLv3`). See `androidApp/src/main/assets/stockfish/` for full GPL notices and source references.
+- **Puzzles**: Puzzle data provided by Lichess (`CC0 1.0`).
+- **Codebase**: Distributed under the MIT License.

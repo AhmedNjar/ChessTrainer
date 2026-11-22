@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.knight.chesstrainer.App
-import com.knight.chesstrainer.android.BuildConfig
 import com.knight.chesstrainer.auth.RestAuthGateway
 import com.knight.chesstrainer.auth.createAuthHttpClient
 import com.knight.chesstrainer.engine.AndroidStockfishGateway
