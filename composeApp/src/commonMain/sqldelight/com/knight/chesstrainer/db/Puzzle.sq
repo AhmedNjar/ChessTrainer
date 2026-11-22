@@ -1,0 +1,52 @@
+CREATE TABLE puzzle (
+  puzzleId TEXT NOT NULL PRIMARY KEY,
+  fen TEXT NOT NULL,
+  moves TEXT NOT NULL,
+  rating INTEGER NOT NULL,
+  ratingDeviation INTEGER NOT NULL,
+  popularity INTEGER NOT NULL,
+  nbPlays INTEGER NOT NULL,
+  themes TEXT NOT NULL,
+  gameUrl TEXT NOT NULL,
+  openingTags TEXT NOT NULL,
+  dailyDate TEXT
+);
+
+CREATE TABLE opening_repertoire (
+  id TEXT NOT NULL PRIMARY KEY,
+  opening TEXT NOT NULL,
+  variation TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  pliesJson TEXT NOT NULL,
+  updatedAt INTEGER NOT NULL
+);
+
+selectAllOpeningRepertoires:
+SELECT * FROM opening_repertoire ORDER BY opening, variation;
+
+insertOpeningRepertoire:
+INSERT OR REPLACE INTO opening_repertoire(id, opening, variation, summary, pliesJson, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+countOpeningRepertoires:
+SELECT COUNT(*) FROM opening_repertoire;
+
+selectStarterPuzzles:
+SELECT * FROM puzzle ORDER BY rating LIMIT ?;
+
+filterPuzzles:
+SELECT * FROM puzzle
+WHERE rating BETWEEN ? AND ?
+  AND (? = '' OR themes LIKE '%' || ? || '%')
+ORDER BY popularity DESC
+LIMIT ?;
+
+insertPuzzle:
+INSERT OR REPLACE INTO puzzle(puzzleId, fen, moves, rating, ratingDeviation, popularity, nbPlays, themes, gameUrl, openingTags, dailyDate)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clearPuzzles:
+DELETE FROM puzzle;
+
+countPuzzles:
+SELECT COUNT(*) FROM puzzle;

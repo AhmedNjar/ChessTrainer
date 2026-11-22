@@ -1,0 +1,8 @@
+CREATE TABLE opening_repertoire (
+  id TEXT NOT NULL PRIMARY KEY,
+  opening TEXT NOT NULL,
+  variation TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  pliesJson TEXT NOT NULL,
+  updatedAt INTEGER NOT NULL
+);

@@ -1,0 +1,14 @@
+Stockfish 19 Android ARM64 universal executable
+
+The native engine in androidApp/src/main/jniLibs/arm64-v8a/libstockfish.so is
+from the official Stockfish 19 release (tag sf_19), published September 5,
+2026. The corresponding source is available at:
+https://github.com/official-stockfish/Stockfish/tree/sf_19
+
+Stockfish is licensed under GNU General Public License version 3 or later.
+See Copying.txt and AUTHORS in this directory. The bundled executable's
+official release archive SHA-256 is:
+ebb24051aa4a222b4daaf049b882ecf1163d370c128fe02316602643f4d5e426
+
+This app launches the engine as a local UCI process. Stockfish is not a service
+or a network dependency; play works offline.

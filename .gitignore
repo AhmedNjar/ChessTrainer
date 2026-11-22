@@ -1,0 +1,13 @@
+.gradle/
+.idea/
+**/build/
+local.properties
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.env
+DerivedData/
+*.xcuserstate
